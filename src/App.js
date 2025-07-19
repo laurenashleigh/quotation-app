@@ -10,7 +10,7 @@ function App() {
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
   const [selectedProduct, setSelectedProduct] = useState('');
-  const [selectedSize, setSelectedSize] = useState('');
+  const [selectedSubProduct, setSelectedSubProduct] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
 
@@ -29,27 +29,27 @@ function App() {
 
   // Hardcoded product data (you can fetch this from an API in a real app)
   const electricalProducts = [
-    { id: 'product_a', name: 'Light sockets', price: 100, sizes: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, sizes: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, sizes: ['X-Small', 'Small'] },
+    { id: 'product_a', name: 'Light sockets', price: 100, variations: ['Small', 'Medium', 'Large'] },
+    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
+    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
   ];
 
   const fireProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, sizes: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, sizes: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, sizes: ['X-Small', 'Small'] },
+    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
+    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
+    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
   ];
 
   const securityProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, sizes: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, sizes: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, sizes: ['X-Small', 'Small'] },
+    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
+    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
+    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
   ];
 
   const cctvProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, sizes: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, sizes: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, sizes: ['X-Small', 'Small'] },
+    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
+    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
+    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
   ];
 
   // Initialize EmailJS when the component mounts
@@ -94,7 +94,7 @@ function App() {
     // Set quotation details
     setQuotationDetails({
       productName: currentProduct.name,
-      productSize: selectedSize || 'N/A', // Use N/A if no size selected
+      productVariation: selectedSubProduct || 'N/A', // Use N/A if no variation selected
       quantity: quantity,
       unitPrice: currentProduct.price,
       totalPrice: totalPrice,
@@ -130,7 +130,7 @@ function App() {
       customer_name: quotationDetails.customerName,
       customer_email: quotationDetails.customerEmail,
       product_name: quotationDetails.productName,
-      product_size: quotationDetails.productSize,
+      product_variation: quotationDetails.productVariation,
       quantity: quotationDetails.quantity,
       unit_price: quotationDetails.unitPrice.toFixed(2),
       total_price: quotationDetails.totalPrice.toFixed(2),
@@ -167,7 +167,7 @@ function App() {
     setCustomerName('');
     setCustomerEmail('');
     setSelectedProduct('');
-    setSelectedSize('');
+    setSelectedSubProduct('');
     setQuantity(1);
     setNotes('');
     setQuotationDetails(null);
@@ -244,7 +244,8 @@ function App() {
               />
             </div>
           </div>
-
+          <hr className="my-6 border-t border-gray-300" />
+          <h3 className='font-bold'>Products</h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
@@ -256,7 +257,7 @@ function App() {
                 value={selectedProduct}
                 onChange={(e) => {
                   setSelectedProduct(e.target.value);
-                  setSelectedSize(''); // Reset size when product changes
+                  setSelectedSubProduct(''); // Reset variation when product changes
                 }}
                 required
               >
@@ -269,21 +270,21 @@ function App() {
               </select>
             </div>
 
-            {currentProduct && currentProduct.sizes.length > 0 && (
+            {currentProduct && currentProduct.variations.length > 0 && (
               <div>
-                <label htmlFor="size" className="block text-sm font-medium text-gray-700 mb-1">
-                  Size
+                <label htmlFor="variation" className="block text-sm font-medium text-gray-700 mb-1">
+                  Variation
                 </label>
                 <select
-                  id="size"
+                  id="variation"
                   className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                  value={selectedSize}
-                  onChange={(e) => setSelectedSize(e.target.value)}
+                  value={selectedSubProduct}
+                  onChange={(e) => setSelectedSubProduct(e.target.value)}
                 >
-                  <option value="">Select a size</option>
-                  {currentProduct.sizes.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
+                  <option value="">Select a variation</option>
+                  {currentProduct.variations.map((variation) => (
+                    <option key={variation} value={variation}>
+                      {variation}
                     </option>
                   ))}
                 </select>
@@ -305,7 +306,188 @@ function App() {
               />
             </div>
           </div>
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
+                Fire <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="product"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={selectedProduct}
+                onChange={(e) => {
+                  setSelectedProduct(e.target.value);
+                  setSelectedSubProduct(''); // Reset variation when product changes
+                }}
+                required
+              >
+                <option value="">Select a product</option>
+                {fireProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
+            {currentProduct && currentProduct.variations.length > 0 && (
+              <div>
+                <label htmlFor="variation" className="block text-sm font-medium text-gray-700 mb-1">
+                  Variation
+                </label>
+                <select
+                  id="variation"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={selectedSubProduct}
+                  onChange={(e) => setSelectedSubProduct(e.target.value)}
+                >
+                  <option value="">Select a variation</option>
+                  {currentProduct.variations.map((variation) => (
+                    <option key={variation} value={variation}>
+                      {variation}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="quantity"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} // Ensure quantity is at least 1
+                min="1"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
+                Security <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="product"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={selectedProduct}
+                onChange={(e) => {
+                  setSelectedProduct(e.target.value);
+                  setSelectedSubProduct(''); // Reset variation when product changes
+                }}
+                required
+              >
+                <option value="">Select a product</option>
+                {securityProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {currentProduct && currentProduct.variations.length > 0 && (
+              <div>
+                <label htmlFor="variation" className="block text-sm font-medium text-gray-700 mb-1">
+                  Variation
+                </label>
+                <select
+                  id="variation"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={selectedSubProduct}
+                  onChange={(e) => setSelectedSubProduct(e.target.value)}
+                >
+                  <option value="">Select a variation</option>
+                  {currentProduct.variations.map((variation) => (
+                    <option key={variation} value={variation}>
+                      {variation}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="quantity"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} // Ensure quantity is at least 1
+                min="1"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div>
+              <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
+                CCTV <span className="text-red-500">*</span>
+              </label>
+              <select
+                id="product"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={selectedProduct}
+                onChange={(e) => {
+                  setSelectedProduct(e.target.value);
+                  setSelectedSubProduct(''); // Reset variation when product changes
+                }}
+                required
+              >
+                <option value="">Select a product</option>
+                {cctvProducts.map((product) => (
+                  <option key={product.id} value={product.id}>
+                    {product.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {currentProduct && currentProduct.variations.length > 0 && (
+              <div>
+                <label htmlFor="variation" className="block text-sm font-medium text-gray-700 mb-1">
+                  Variation
+                </label>
+                <select
+                  id="variation"
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={selectedSubProduct}
+                  onChange={(e) => setSelectedSubProduct(e.target.value)}
+                >
+                  <option value="">Select a variation</option>
+                  {currentProduct.variations.map((variation) => (
+                    <option key={variation} value={variation}>
+                      {variation}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                id="quantity"
+                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                value={quantity}
+                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} // Ensure quantity is at least 1
+                min="1"
+                required
+              />
+            </div>
+          </div> */}
+
+          <hr className="my-6 border-t border-gray-300" />
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
               Additional Notes
@@ -340,7 +522,7 @@ function App() {
                 <strong className="text-gray-900">Product:</strong> {quotationDetails.productName}
               </p>
               <p className="text-gray-700">
-                <strong className="text-gray-900">Size:</strong> {quotationDetails.productSize}
+                <strong className="text-gray-900">Variation:</strong> {quotationDetails.productVariation}
               </p>
               <p className="text-gray-700">
                 <strong className="text-gray-900">Quantity:</strong> {quotationDetails.quantity}
