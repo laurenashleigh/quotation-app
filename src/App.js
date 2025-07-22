@@ -9,8 +9,6 @@ function App() {
   // State for form inputs
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [selectedProduct, setSelectedProduct] = useState('');
-  const [selectedSubProduct, setSelectedSubProduct] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [notes, setNotes] = useState('');
 
@@ -28,19 +26,25 @@ function App() {
   const [modalType, setModalType] = useState('info'); // 'info', 'success', 'error'
 
   const [productRows, setProductRows] = useState([
-    { selectedProduct: '', selectedSubProduct: '', quantity: 1 },
+    { selectedCategory: '', selectedProduct: '', quantity: 1 },
   ]);
   
   const handleAddProductRow = () => {
     setProductRows([
       ...productRows,
-      { selectedProduct: '', selectedSubProduct: '', quantity: 1 },
+      { selectedCategory: '', selectedProduct: '', quantity: 1 },
     ]);
   };
   
   const handleProductRowChange = (index, field, value) => {
     const updatedRows = [...productRows];
     updatedRows[index][field] = value;
+  
+    // Reset the product if the category changes
+    if (field === 'selectedCategory') {
+      updatedRows[index].selectedProduct = '';
+    }
+  
     setProductRows(updatedRows);
   };
 
@@ -51,27 +55,27 @@ function App() {
 
   // Hardcoded product data (you can fetch this from an API in a real app)
   const electricalProducts = [
-    { id: 'product_a', name: 'Light sockets', price: 100, variations: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
+    { id: 'product_electric_a', name: 'Light sockets', price: 100 },
+    { id: 'product_electric_b', name: 'Premium Gizmo', price: 250 },
+    { id: 'product_electric_c', name: 'Economy Gadget', price: 50 },
   ];
-
+  
   const fireProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
+    { id: 'product_fire_a', name: 'Standard Gizmo', price: 100 },
+    { id: 'product_fire_b', name: 'Premium Gizmo', price: 250 },
+    { id: 'product_fire_c', name: 'Economy Gadget', price: 50 },
   ];
-
+  
   const securityProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
+    { id: 'product_security_a', name: 'Standard Gizmo', price: 100 },
+    { id: 'product_security_b', name: 'Premium Gizmo', price: 250 },
+    { id: 'product_security_c', name: 'Economy Gadget', price: 50 },
   ];
-
+  
   const cctvProducts = [
-    { id: 'product_a', name: 'Standard gizmo', price: 100, variations: ['Small', 'Medium', 'Large'] },
-    { id: 'product_b', name: 'Premium Gizmo', price: 250, variations: ['Standard'] },
-    { id: 'product_c', name: 'Economy Gadget', price: 50, variations: ['X-Small', 'Small'] },
+    { id: 'product_cctv_a', name: 'Standard Gizmo', price: 100 },
+    { id: 'product_cctv_b', name: 'Premium Gizmo', price: 250 },
+    { id: 'product_cctv_c', name: 'Economy Gadget', price: 50 },
   ];
 
   // Initialize EmailJS when the component mounts
@@ -88,47 +92,88 @@ function App() {
     }
   }, []);
 
-  // Get the currently selected product object
-  const currentProduct = electricalProducts.find(p => p.id === selectedProduct);
-
   // Handle form submission for quotation generation
   const handleGenerateQuote = (e) => {
     e.preventDefault();
-
+  
     // Basic validation
-    if (!customerName || !customerEmail || !selectedProduct || !quantity || quantity <= 0) {
-      setModalMessage('Please fill in all required fields (Customer Name, Customer Email, Product, Quantity) and ensure quantity is positive.');
+    if (!customerName || !customerEmail) {
+      setModalMessage('Please fill in all required fields (Customer Name, Customer Email).');
       setModalType('error');
       setShowModal(true);
       return;
     }
-
-    if (!currentProduct) {
-      setModalMessage('Please select a valid product.');
-      setModalType('error');
-      setShowModal(true);
-      return;
+  
+    // Validate each product row
+    for (const row of productRows) {
+      if (!row.selectedCategory || !row.selectedProduct || row.quantity <= 0) {
+        setModalMessage('Please ensure all product rows have a valid category, product, and positive quantity.');
+        setModalType('error');
+        setShowModal(true);
+        return;
+      }
     }
-
-    // Calculate total price
-    const totalPrice = currentProduct.price * quantity;
-
-    // Set quotation details
-    setQuotationDetails({
-      productName: currentProduct.name,
-      productVariation: selectedSubProduct || 'N/A', // Use N/A if no variation selected
-      quantity: quantity,
-      unitPrice: currentProduct.price,
-      totalPrice: totalPrice,
-      customerName: customerName,
-      customerEmail: customerEmail,
-      notes: notes,
+  
+    console.log('Product Rows:', productRows); // Debugging log
+  
+    // Generate the list of products and calculate the total price
+    const productList = productRows.map((row) => {
+      const productList =
+        row.selectedCategory === 'electrical'
+          ? electricalProducts
+          : row.selectedCategory === 'fire'
+          ? fireProducts
+          : row.selectedCategory === 'security'
+          ? securityProducts
+          : row.selectedCategory === 'cctv'
+          ? cctvProducts
+          : [];
+  
+      // Find the selected product
+      const currentProduct = productList.find((p) => p.id === row.selectedProduct);
+  
+      // Handle undefined product
+      if (!currentProduct) {
+        console.error(`Product not found for ID: ${row.selectedProduct} in category: ${row.selectedCategory}`);
+        setModalMessage('An error occurred while processing the products. Please check your selections.');
+        setModalType('error');
+        setShowModal(true);
+        return null; // Stop processing this row
+      }
+  
+      return {
+        productName: currentProduct.name,
+        category: row.selectedCategory,
+        quantity: row.quantity,
+        unitPrice: currentProduct.price,
+        totalPrice: currentProduct.price * row.quantity,
+      };
     });
-
+  
+    // Check for null rows (in case of errors)
+    if (productList.includes(null)) {
+      return;
+    }
+  
+    // Calculate the total price for all products
+    const totalPrice = productList.reduce((sum, product) => sum + product.totalPrice, 0);
+  
+    // Create the new quotation details
+    const newQuotationDetails = {
+      customerName,
+      customerEmail,
+      products: productList,
+      totalPrice: totalPrice.toFixed(2),
+      notes: notes || 'No additional notes.',
+    };
+  
+    console.log('New Quotation Details:', newQuotationDetails); // Debugging log
+  
+    // Set quotation details
+    setQuotationDetails(newQuotationDetails);
+  
+    // Show quotation
     setShowQuotation(true);
-    setModalMessage('Quotation generated successfully! You can now send it via email.');
-    setModalType('success');
-    setShowModal(true);
   };
 
   // Handle sending the email
@@ -151,17 +196,21 @@ function App() {
     const templateParams = {
       customer_name: quotationDetails.customerName,
       customer_email: quotationDetails.customerEmail,
-      product_name: quotationDetails.productName,
-      product_variation: quotationDetails.productVariation,
-      quantity: quotationDetails.quantity,
-      unit_price: quotationDetails.unitPrice.toFixed(2),
-      total_price: quotationDetails.totalPrice.toFixed(2),
+      products: quotationDetails.products
+        .map(
+          (product) =>
+            `Product: ${product.productName} (Category: ${product.category}), Quantity: ${product.quantity}, Unit Price: £${product.unitPrice.toFixed(
+              2
+            )}, Total Price: £${product.totalPrice.toFixed(2)}`
+        )
+        .join('\n'), // Join all product details into a single string
+      total_price: `£${quotationDetails.totalPrice}`,
       notes: quotationDetails.notes || 'No additional notes.',
       // The 'to_email' should be your email address, configured in the EmailJS template
       // or you can pass it here if your template is set up to receive it dynamically.
       // For this example, assume 'to_email' is configured in the template itself.
     };
-
+    console.log({templateParams})
     try {
       if (!emailjs) {
         throw new Error("EmailJS SDK is not initialized.");
@@ -188,8 +237,6 @@ function App() {
   const resetForm = () => {
     setCustomerName('');
     setCustomerEmail('');
-    setSelectedProduct('');
-    setSelectedSubProduct('');
     setQuantity(1);
     setNotes('');
     setQuotationDetails(null);
@@ -270,82 +317,89 @@ function App() {
           <div>
           {productRows.map((row, index) => (
             <div key={index} className="grid grid-cols-12 gap-4 items-end mb-4">
-            <div className="col-span-4">
-              <label htmlFor={`product-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                Product
-              </label>
-              <select
-                id={`product-${index}`}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                value={row.selectedProduct}
-                onChange={(e) => handleProductRowChange(index, 'selectedProduct', e.target.value)}
-              >
-                <option value="">Select a product</option>
-                {electricalProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          
-            <div className="col-span-4">
-              <label htmlFor={`variation-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                Variation
-              </label>
-              <select
-                id={`variation-${index}`}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                value={row.selectedSubProduct}
-                onChange={(e) => handleProductRowChange(index, 'selectedSubProduct', e.target.value)}
-              >
-                <option value="">Select a variation</option>
-                {electricalProducts
-                  .find((product) => product.id === row.selectedProduct)?.variations.map((variation) => (
-                    <option key={variation} value={variation}>
-                      {variation}
+              {/* Category Dropdown */}
+              <div className="col-span-4">
+                <label htmlFor={`category-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                  Category
+                </label>
+                <select
+                  id={`category-${index}`}
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={row.selectedCategory}
+                  onChange={(e) => handleProductRowChange(index, 'selectedCategory', e.target.value)}
+                >
+                  <option value="">Select a category</option>
+                  <option value="electrical">Electrical</option>
+                  <option value="fire">Fire</option>
+                  <option value="security">Security</option>
+                  <option value="cctv">CCTV</option>
+                </select>
+              </div>
+
+              {/* Product Dropdown */}
+              <div className="col-span-4">
+                <label htmlFor={`product-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                  Product
+                </label>
+                <select
+                  id={`product-${index}`}
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={row.selectedProduct}
+                  onChange={(e) => handleProductRowChange(index, 'selectedProduct', e.target.value)}
+                  disabled={!row.selectedCategory} // Disable if no category is selected
+                >
+                  <option value="">Select a product</option>
+                  {(row.selectedCategory === 'electrical' ? electricalProducts :
+                    row.selectedCategory === 'fire' ? fireProducts :
+                    row.selectedCategory === 'security' ? securityProducts :
+                    row.selectedCategory === 'cctv' ? cctvProducts : []
+                  ).map((product) => (
+                    <option key={product.id} value={product.id}>
+                      {product.name}
                     </option>
                   ))}
-              </select>
-            </div>
-          
-            <div className="col-span-3">
-              <label htmlFor={`quantity-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity
-              </label>
-              <input
-                type="number"
-                id={`quantity-${index}`}
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                value={row.quantity}
-                onChange={(e) =>
-                  handleProductRowChange(index, 'quantity', Math.max(1, parseInt(e.target.value) || 1))
-                }
-                min="1"
-              />
-            </div>
-          
-            <div className="col-span-1 flex justify-end">
-              <button
-                type="button"
-                onClick={() => handleRemoveProductRow(index)}
-                className="mt-6 px-2 py-2 bg-gray-500 text-white rounded-md shadow-md hover:bg-gray-600 transition duration-300 ease-in-out flex items-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
+                </select>
+              </div>
+
+              {/* Quantity Input */}
+              <div className="col-span-3">
+                <label htmlFor={`quantity-${index}`} className="block text-sm font-medium text-gray-700 mb-1">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  id={`quantity-${index}`}
+                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
+                  value={row.quantity}
+                  onChange={(e) =>
+                    handleProductRowChange(index, 'quantity', Math.max(1, parseInt(e.target.value) || 1))
+                  }
+                  min="1"
+                />
+              </div>
+
+              {/* Remove Button */}
+              <div className="col-span-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => handleRemoveProductRow(index)}
+                  className="mt-6 px-2 py-2 bg-gray-500 text-white rounded-md shadow-md hover:bg-gray-600 transition duration-300 ease-in-out flex items-center"
                 >
-                  <path
-                    fillRule="evenodd"
-                    d="M6 8a1 1 0 011-1h6a1 1 0 011 1v8a1 1 0 01-1 1H7a1 1 0 01-1-1V8zm3-3a1 1 0 112 0v1h2a1 1 0 110 2H5a1 1 0 110-2h2V5z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M6 8a1 1 0 011-1h6a1 1 0 011 1v8a1 1 0 01-1 1H7a1 1 0 01-1-1V8zm3-3a1 1 0 112 0v1h2a1 1 0 110 2H5a1 1 0 110-2h2V5z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
             </div>
-          </div>
           ))}
 
           <div className="flex justify-end">
@@ -369,92 +423,6 @@ function App() {
             </button>
           </div>
         </div>
-          {/* <h3 className='font-bold'>Products</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <label htmlFor="product" className="block text-sm font-medium text-gray-700 mb-1">
-                Electrical <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="product"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                value={selectedProduct}
-                onChange={(e) => {
-                  setSelectedProduct(e.target.value);
-                  setSelectedSubProduct(''); // Reset variation when product changes
-                }}
-                required
-              >
-                <option value="">Select a product</option>
-                {electricalProducts.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {currentProduct && currentProduct.variations.length > 0 && (
-              <div>
-                <label htmlFor="variation" className="block text-sm font-medium text-gray-700 mb-1">
-                  Variation
-                </label>
-                <select
-                  id="variation"
-                  className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                  value={selectedSubProduct}
-                  onChange={(e) => setSelectedSubProduct(e.target.value)}
-                >
-                  <option value="">Select a variation</option>
-                  {currentProduct.variations.map((variation) => (
-                    <option key={variation} value={variation}>
-                      {variation}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            <div>
-              <label htmlFor="quantity" className="block text-sm font-medium text-gray-700 mb-1">
-                Quantity <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="number"
-                id="quantity"
-                className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                value={quantity}
-                onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))} // Ensure quantity is at least 1
-                min="1"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex items-center justify-start">
-              <button
-                type="button"
-                onClick={() => {
-                  // Logic to add a new product form row
-                  setSelectedProduct('');
-                  setSelectedSubProduct('');
-                  setQuantity(1);
-                }}
-                className="mt-6 px-2 py-2 bg-blue-500 text-white rounded-md shadow-md hover:bg-blue-600 transition duration-300 ease-in-out flex items-center"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </button>
-            </div> */}
           <hr className="my-6 border-t border-gray-300" />
           <div>
             <label htmlFor="notes" className="block text-sm font-medium text-gray-700 mb-1">
@@ -483,29 +451,41 @@ function App() {
           <div className="mt-10 pt-8 border-t border-gray-200">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">Generated Quotation</h2>
             <div className="bg-blue-50 p-6 rounded-lg shadow-inner border border-blue-200 space-y-3">
-              <p className="text-gray-700">
-                <strong className="text-gray-900">Customer:</strong> {quotationDetails.customerName} ({quotationDetails.customerEmail})
+            <p className="text-gray-700 text-xl">
+              Quote for: <strong className="text-gray-900">{quotationDetails.customerName} ({quotationDetails.customerEmail})</strong> 
+            </p>
+
+            <div className="mt-4">
+              <strong className="text-gray-900">Products:</strong>
+              <ul className="list-none list-inside text-gray-700">
+                {quotationDetails.products.map((product, index) => (
+                  <li key={index} className="mt-2">
+                    <p>
+                      <strong>Product:</strong> {product.productName} ({product.category})
+                    </p>
+                    <p>
+                      <strong>Quantity:</strong> {product.quantity}
+                    </p>
+                    <p>
+                      <strong>Unit Price:</strong> £{product.unitPrice.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Total Price:</strong> £{product.totalPrice.toFixed(2)}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <p className="text-2xl font-bold text-blue-700 pt-4 border-t border-blue-200">
+              Total Price: £{quotationDetails.totalPrice}
+            </p>
+
+            {quotationDetails.notes && (
+              <p className="text-gray-600 italic mt-2">
+                <strong className="text-gray-800">Notes:</strong> {quotationDetails.notes}
               </p>
-              <p className="text-gray-700">
-                <strong className="text-gray-900">Product:</strong> {quotationDetails.productName}
-              </p>
-              <p className="text-gray-700">
-                <strong className="text-gray-900">Variation:</strong> {quotationDetails.productVariation}
-              </p>
-              <p className="text-gray-700">
-                <strong className="text-gray-900">Quantity:</strong> {quotationDetails.quantity}
-              </p>
-              <p className="text-gray-700">
-                <strong className="text-gray-900">Unit Price:</strong> £{quotationDetails.unitPrice.toFixed(2)}
-              </p>
-              <p className="text-2xl font-bold text-blue-700 pt-2 border-t border-blue-200">
-                Total Price: £{quotationDetails.totalPrice.toFixed(2)}
-              </p>
-              {quotationDetails.notes && (
-                <p className="text-gray-600 italic">
-                  <strong className="text-gray-800">Notes:</strong> {quotationDetails.notes}
-                </p>
-              )}
+            )}
             </div>
 
             <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
